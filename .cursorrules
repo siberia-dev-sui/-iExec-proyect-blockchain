@@ -1,0 +1,190 @@
+# iExec Web3 Mail Integration - Project Rules
+
+## Project Context
+This is a Proof of Concept for Quintes Protocol integrating iExec Web3 Mail functionality into a Webflow-exported landing page. The goal is to create a working whitelist system that demonstrates Web3 Mail capabilities.
+
+## Code Constraints (CRITICAL)
+1. **DO NOT modify Webflow exported CSS files** (hugos-stupendous-site-cdb0c4.webflow.css, normalize.css, webflow.css)
+2. **DO NOT modify webflow.js** - it's core Webflow functionality that must remain untouched
+3. **USE vanilla JavaScript only** - no React, Vue, or other frameworks
+4. **ALL custom logic goes in js/logic.js** - keep it modular and well-documented
+5. **USE Ethers.js v5** (not v6) for Web3 interactions
+6. **USE browser alerts for PoC feedback** - no custom UI components needed yet
+
+## Architecture
+- Read `docs/ARCHITECTURE.md` for complete technical specification
+- Read `docs/IEXEC_WEB3MAIL_DOCS.md` for complete iExec API reference
+- Follow the 5-step user flow documented in ARCHITECTURE.md
+
+## iExec Web3 Mail API Quick Reference
+
+### Initialization
+```javascript
+// Initialize with ethers provider
+const web3mail = new IExecWeb3Mail(ethersProvider);
+```
+
+### Core Methods (in order of use)
+
+#### 1. protectData({ data })
+Encrypts user email using iExec's encryption.
+
+**Parameters:**
+- `data` (object): Data to protect, e.g., `{ email: 'user@example.com' }`
+
+**Returns:** 
+- Promise resolving to object with `address` property
+
+**Example:**
+```javascript
+const protectedData = await web3mail.protectData({
+  data: { email: 'user@example.com' }
+});
+// Returns: { address: '0x...', ... }
+```
+
+#### 2. grantAccess({ protectedData, authorizedApp, authorizedUser })
+Grants an application access to encrypted data.
+
+**Parameters:**
+- `protectedData` (string): Address from protectData result
+- `authorizedApp` (string): App's Ethereum address from iExec dashboard
+- `authorizedUser` (string): User's wallet address
+
+**Example:**
+```javascript
+await web3mail.grantAccess({
+  protectedData: protectedData.address,
+  authorizedApp: CONFIG.APP_ADDRESS,
+  authorizedUser: userAddress
+});
+```
+
+#### 3. fetchUserContacts()
+Retrieves user's protected contacts from iExec.
+
+**Returns:**
+- Promise<Array<ContactObject>>
+
+**Example:**
+```javascript
+const contacts = await web3mail.fetchUserContacts();
+```
+
+#### 4. sendEmail({ protectedData, emailSubject, emailContent })
+Sends an email via Web3 Mail protocol.
+
+**Parameters:**
+- `protectedData` (string): Recipient's protected data address
+- `emailSubject` (string): Email subject line
+- `emailContent` (string): Email body (supports HTML)
+
+**Example:**
+```javascript
+await web3mail.sendEmail({
+  protectedData: protectedData.address,
+  emailSubject: 'Welcome to Quintes Whitelist',
+  emailContent: '<h1>Congratulations!</h1><p>Your spot is secured.</p>'
+});
+```
+
+## Network Configuration
+- **Testnet:** Polygon Mumbai (Chain ID: 80001, Hex: 0x13881)
+- **RPC URL:** https://rpc-mumbai.maticvigil.com/
+- **Block Explorer:** https://mumbai.polygonscan.com/
+- **Mainnet:** Polygon (Chain ID: 137) - NOT FOR PoC
+- **App Address:** Must be obtained from iExec dashboard (configure in logic.js)
+
+## Error Handling Strategy
+- Wrap ALL async Web3 calls in try-catch blocks
+- Provide specific error messages: `"Failed to [action]: ${error.message}"`
+- Log ALL errors to console for debugging: `console.error('Context:', error)`
+- Show user-friendly alerts for each error scenario
+- Handle MetaMask-specific errors (code 4001 = user rejection)
+
+### Common Errors to Handle
+- MetaMask not installed → Redirect to download
+- Wrong network → Prompt to switch to Mumbai
+- User rejects transaction → Clear, non-technical message
+- Insufficient balance → Explain gas requirements
+- iExec API errors → Provide context and retry option
+
+## Code Style Requirements
+- Use `async/await` syntax (NOT `.then()` chains)
+- Add JSDoc comments to ALL functions
+- Use `const`/`let` exclusively (NO `var`)
+- Use descriptive variable names (e.g., `userWalletAddress` not `addr`)
+- Add comments explaining the "why" not just the "what"
+- Keep functions small and single-purpose
+
+### User Flow Sequence (MUST FOLLOW)
+1. Connect wallet (MetaMask)
+2. Initialize iExec SDK
+3. Protect user data (encrypt email)
+4. Grant access to app
+5. Send confirmation email
+
+## File Modification Rules
+
+### When modifying index.html:
+- Add CDN scripts in `<head>` section only (before `</head>`)
+- Required CDNs:
+  - Ethers.js v5: `https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js`
+  - iExec SDK: `https://unpkg.com/@iexec/web3mail@latest/dist/index.umd.js`
+- Add `logic.js` reference before `</body>` tag
+- Modify main CTA button to add `id="joinWhitelistBtn"`
+- Preserve ALL Webflow data attributes (`data-w-id`, `data-wf-*`)
+- Do NOT modify existing CSS classes
+
+### When creating js/logic.js:
+- Start with configuration object (CONFIG)
+- Implement state management variables
+- Add DOMContentLoaded event listener
+- Implement functions in logical order (connect → init → protect → grant → send)
+- Add validation helpers (email validation, etc.)
+- Add MetaMask event listeners (accountsChanged, chainChanged)
+
+## Testing Requirements
+1. Test MetaMask connection in isolation first
+2. Test network switching functionality
+3. Test each iExec method independently before integration
+4. Test complete flow end-to-end
+5. Test error scenarios (rejection, wrong network, etc.)
+6. Use Polygon Mumbai testnet ONLY for PoC
+7. Verify email delivery via Web3 Mail
+
+## Dependencies (Load via CDN)
+```html
+<!-- Ethers.js v5 -->
+<script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
+
+<!-- iExec SDK -->
+<script src="https://unpkg.com/@iexec/web3mail@latest/dist/index.umd.js"></script>
+```
+
+## Deployment
+- **Platform:** Vercel
+- **Branch:** main (auto-deploy on push)
+- **Build Command:** None (static site)
+- **Output Directory:** . (root)
+- **Environment Variables:** None needed for PoC
+
+## Documentation References
+- Full iExec documentation: https://docs.iex.ec/for-developers/web3mail
+- Ethers.js v5 docs: https://docs.ethers.org/v5/
+- MetaMask docs: https://docs.metamask.io/
+
+## Development Workflow
+1. Always read this file first before making changes
+2. Reference ARCHITECTURE.md for technical decisions
+3. Check IEXEC_WEB3MAIL_DOCS.md for API details
+4. Test locally before committing
+5. Commit with semantic commit messages (feat:, fix:, docs:)
+6. Deploy to Vercel after successful local testing
+
+## Notes for AI Assistant
+- When implementing features, cite these rules explicitly
+- If asked to deviate from these rules, ask for confirmation first
+- Always prioritize code maintainability and documentation
+- Keep the client's professional image in mind - quality over speed
+
