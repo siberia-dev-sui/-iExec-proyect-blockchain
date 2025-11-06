@@ -64,6 +64,40 @@ body {
 .w-slider-dot.w-active {
   background-color: #005EB8 !important; /* Solid 005EB8 */
 }
+
+/* Glowing Button Effect - Crypto Style */
+.primary-button {
+  position: relative;
+  border-radius: 8px !important;
+  box-shadow: 0 0 20px rgba(205, 250, 80, 0.4),
+              0 0 40px rgba(205, 250, 80, 0.2),
+              inset 0 0 10px rgba(205, 250, 80, 0.1);
+  transition: all 0.3s ease;
+  animation: subtle-pulse 3s ease-in-out infinite;
+  border: 2px solid rgba(205, 250, 80, 0.6) !important;
+}
+
+.primary-button:hover {
+  box-shadow: 0 0 30px rgba(205, 250, 80, 0.8),
+              0 0 60px rgba(205, 250, 80, 0.4),
+              0 0 90px rgba(205, 250, 80, 0.2),
+              inset 0 0 20px rgba(205, 250, 80, 0.2);
+  transform: translateY(-2px);
+  border: 2px solid rgba(205, 250, 80, 1) !important;
+}
+
+@keyframes subtle-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(205, 250, 80, 0.4),
+                0 0 40px rgba(205, 250, 80, 0.2),
+                inset 0 0 10px rgba(205, 250, 80, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(205, 250, 80, 0.5),
+                0 0 50px rgba(205, 250, 80, 0.3),
+                inset 0 0 15px rgba(205, 250, 80, 0.15);
+  }
+}
 </style>
     </div>
     <div data-w-id="95dd3226-9371-14e2-5563-c13ef50ea6e8" data-animation="default" data-collapse="medium" data-duration="400" data-easing="ease" data-easing2="ease" role="banner" class="navbar w-nav">
