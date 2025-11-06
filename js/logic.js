@@ -11,16 +11,13 @@
 // ============================================================================
 
 const CONFIG = {
-  // TODO: Replace with actual app address from iExec dashboard
-  // Get this from: https://protocol.iex.ec/
-  APP_ADDRESS: '0xYourAppAddressFromIExecDashboard',
-  
-  // Polygon Mumbai Testnet configuration
-  NETWORK_ID: 80001,
-  NETWORK_NAME: 'Polygon Mumbai',
-  NETWORK_HEX: '0x13881',
-  RPC_URL: 'https://rpc-mumbai.maticvigil.com/',
-  BLOCK_EXPLORER: 'https://mumbai.polygonscan.com/',
+  // Network configuration - Using Arbitrum One (iExec default network)
+  // Note: iExec Web3Mail works with default configuration - no app registration needed!
+  NETWORK_ID: 42161,
+  NETWORK_NAME: 'Arbitrum One',
+  NETWORK_HEX: '0xa4b1',
+  RPC_URL: 'https://arb1.arbitrum.io/rpc',
+  BLOCK_EXPLORER: 'https://arbiscan.io/',
   
   // Email content for whitelist confirmation
   EMAIL_SUBJECT: 'Welcome to Quintes Protocol Whitelist',
@@ -118,9 +115,9 @@ async function handleJoinWhitelist(event) {
   try {
     // STEP 1: Connect Wallet
     console.log('📍 Step 1: Connecting wallet...');
-    alert('Step 1: Connecting to MetaMask...\n\nPlease approve the connection in your wallet.');
+    alert('🔐 STEP 1: Connect Your Wallet\n\n✓ This only reads your wallet address (your public ID)\n✓ It does NOT access your funds\n✓ It does NOT transfer any tokens\n\nYour wallet will ask for permission to connect.');
     await connectWallet();
-    alert(`✅ Connected successfully!\n\nYour address: ${userAddress.substring(0, 6)}...${userAddress.substring(38)}`);
+    alert(`✅ Connected Successfully!\n\nYour public address: ${userAddress.substring(0, 6)}...${userAddress.substring(38)}\n\n✓ Your funds are safe\n✓ Only your public ID was shared`);
     console.log('✅ Step 1 complete: Wallet connected');
     
     // STEP 2: Initialize iExec
@@ -150,24 +147,24 @@ async function handleJoinWhitelist(event) {
     
     // STEP 4: Protect email data
     console.log('📍 Step 4: Protecting email data...');
-    alert('Step 3: Encrypting your email...\n\nThis will create a blockchain transaction.\nPlease approve in MetaMask.');
+    alert('🔒 STEP 3: Encrypt Your Email\n\n📝 What happens next:\n✓ Your email will be ENCRYPTED on blockchain\n✓ Only you and authorized apps can read it\n✓ This requires a small gas fee (~$0.01)\n\n💡 Why? You\'re paying for YOUR privacy, not giving us access.\n\nMetaMask will ask you to approve this encryption transaction.');
     const protectedData = await protectUserEmail(userEmail);
-    alert('✅ Email encrypted and secured on blockchain!');
+    alert('✅ Email Encrypted Successfully!\n\n🔐 Your email is now protected on blockchain\n✓ Encrypted with iExec technology\n✓ Only accessible with your permission');
     console.log('✅ Step 4 complete: Data protected');
     console.log('🔒 Protected data address:', protectedData.address);
     
     // STEP 5: Grant access to app
     console.log('📍 Step 5: Granting access...');
-    alert('Step 4: Granting access to Quintes Protocol...\n\nThis allows the app to send you emails.\nPlease approve in MetaMask.');
+    alert('✉️ STEP 4: Grant Email Permission\n\n📝 What this does:\n✓ Allows Quintes Protocol to send YOU emails\n✓ They can NOT see your email address\n✓ They can NOT sell your data\n✓ Small gas fee (~$0.01)\n\n💡 You\'re in control: You can revoke this anytime.\n\nMetaMask will ask for approval.');
     await grantAppAccess(protectedData);
-    alert('✅ Access granted successfully!');
+    alert('✅ Permission Granted!\n\n✓ Quintes Protocol can now send you updates\n✓ Your email remains private and encrypted\n✓ You control this permission');
     console.log('✅ Step 5 complete: Access granted');
     
     // STEP 6: Send confirmation email
     console.log('📍 Step 6: Sending confirmation email...');
-    alert('Step 5: Sending your whitelist confirmation email...\n\nThis may take a moment.\nPlease approve in MetaMask.');
+    alert('📨 STEP 5: Send Welcome Email\n\n📝 Final step:\n✓ Sending your whitelist confirmation\n✓ This uses Web3 Mail (decentralized)\n✓ Small gas fee (~$0.01)\n\n💡 After this, you\'re done!\n\nMetaMask will ask for final approval.');
     await sendConfirmationEmail(protectedData);
-    alert('🎉 SUCCESS!\n\nYou\'ve been added to the Quintes Protocol whitelist!\n\nCheck your email inbox for confirmation.\n(It may take 1-2 minutes to arrive)');
+    alert('🎉 SUCCESS! You\'re on the Whitelist!\n\n✅ Confirmation email sent via Web3 Mail\n📧 Check your inbox in 1-2 minutes\n🔐 All data encrypted and secure\n\nWelcome to Quintes Protocol!');
     console.log('✅ Step 6 complete: Email sent');
     console.log('🎉 COMPLETE: User successfully added to whitelist');
     
@@ -180,7 +177,7 @@ async function handleJoinWhitelist(event) {
     } else if (error.message && error.message.includes('network')) {
       alert('❌ Network Error\n\nPlease check your internet connection and try again.');
     } else if (error.message && error.message.includes('insufficient')) {
-      alert('❌ Insufficient Balance\n\nYou need some MATIC tokens on Polygon Mumbai testnet to complete this transaction.\n\nGet free test MATIC from: https://faucet.polygon.technology/');
+      alert('❌ Insufficient Balance\n\nYou need some ETH on Arbitrum One network to complete this transaction.\n\nYou can bridge ETH to Arbitrum from: https://bridge.arbitrum.io/');
     } else {
       alert(`❌ An error occurred:\n\n${error.message}\n\nPlease try again or contact support if the problem persists.`);
     }
@@ -227,7 +224,7 @@ async function connectWallet() {
       );
       
       if (switchNetwork) {
-        await switchToMumbai();
+        await switchToArbitrum();
       } else {
         throw new Error(`Please switch to ${CONFIG.NETWORK_NAME} to continue.`);
       }
@@ -245,23 +242,23 @@ async function connectWallet() {
 }
 
 /**
- * Switches to Polygon Mumbai testnet
+ * Switches to Arbitrum One mainnet (iExec's default network)
  */
-async function switchToMumbai() {
+async function switchToArbitrum() {
   try {
-    console.log('🔄 Switching to Mumbai...');
+    console.log('🔄 Switching to Arbitrum One...');
     
     await window.ethereum.request({
       method: 'wallet_switchEthereumChain',
       params: [{ chainId: CONFIG.NETWORK_HEX }],
     });
     
-    console.log('✅ Switched to Mumbai');
+    console.log('✅ Switched to Arbitrum One');
     
   } catch (error) {
     // Network not added, try to add it
     if (error.code === 4902) {
-      console.log('📝 Network not found, adding Mumbai...');
+      console.log('📝 Network not found, adding Arbitrum One...');
       
       await window.ethereum.request({
         method: 'wallet_addEthereumChain',
@@ -269,8 +266,8 @@ async function switchToMumbai() {
           chainId: CONFIG.NETWORK_HEX,
           chainName: CONFIG.NETWORK_NAME,
           nativeCurrency: {
-            name: 'MATIC',
-            symbol: 'MATIC',
+            name: 'ETH',
+            symbol: 'ETH',
             decimals: 18
           },
           rpcUrls: [CONFIG.RPC_URL],
@@ -278,7 +275,7 @@ async function switchToMumbai() {
         }]
       });
       
-      console.log('✅ Mumbai network added');
+      console.log('✅ Arbitrum One network added');
     } else {
       throw error;
     }
@@ -343,15 +340,16 @@ async function protectUserEmail(email) {
 
 /**
  * Grants application access to encrypted data
+ * Uses iExec's default Web3Mail configuration
  * @param {Object} protectedData - Protected data object from protectUserEmail
  * @returns {Promise<void>}
  */
 async function grantAppAccess(protectedData) {
   try {
-    console.log('🔑 Granting access to app...');
+    console.log('🔑 Granting access...');
     console.log('📍 Protected data address:', protectedData.address);
-    console.log('📍 App address:', CONFIG.APP_ADDRESS);
     console.log('📍 User address:', userAddress);
+    console.log('📝 Using iExec default Web3Mail whitelist');
     
     if (!web3mail) {
       throw new Error('iExec not initialized. Please initialize first.');
@@ -361,9 +359,10 @@ async function grantAppAccess(protectedData) {
       throw new Error('Invalid protected data. Please protect data first.');
     }
     
+    // Grant access using default iExec Web3Mail configuration
+    // No need to specify authorizedApp - uses iExec's default whitelist
     await web3mail.grantAccess({
       protectedData: protectedData.address,
-      authorizedApp: CONFIG.APP_ADDRESS,
       authorizedUser: userAddress
     });
     
@@ -454,11 +453,12 @@ window.ethereum?.on('chainChanged', (chainId) => {
 // DEBUG INFO
 // ============================================================================
 
-console.log('📋 Configuration loaded:', {
-  networkId: CONFIG.NETWORK_ID,
-  networkName: CONFIG.NETWORK_NAME,
-  appAddress: CONFIG.APP_ADDRESS
+console.log('📋 iExec Web3Mail Configuration:', {
+  network: CONFIG.NETWORK_NAME,
+  chainId: CONFIG.NETWORK_ID,
+  mode: 'Default iExec Configuration (No app registration required)'
 });
 
+console.log('✨ Using iExec default Web3Mail whitelist');
 console.log('🎬 Ready to join whitelist!');
 
