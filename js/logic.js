@@ -83,18 +83,35 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('🔍 Debugging iExec globals:');
   console.log('- IExecDataProtector:', typeof IExecDataProtector);
   console.log('- window.IExecDataProtector:', typeof window.IExecDataProtector);
+  console.log('- window.iexec:', typeof window.iexec);
+  console.log('- window.IEXEC:', typeof window.IEXEC);
+  console.log('- window.dataProtector:', typeof window.dataProtector);
   
-  // Check if DataProtector is available
-  if (typeof IExecDataProtector === 'undefined') {
+  // List ALL custom globals added to window (not standard browser APIs)
+  const customGlobals = Object.keys(window).filter(k => 
+    k.toLowerCase().includes('iexec') || 
+    k.toLowerCase().includes('dataprotector') ||
+    k.toLowerCase().includes('web3mail')
+  );
+  console.log('🔎 All iExec-related globals found:', customGlobals);
+  
+  // Check if DataProtector is available (try multiple possible names)
+  const DataProtectorClass = window.IExecDataProtector || window.dataProtector || window.iexec || window.IEXEC;
+  
+  if (!DataProtectorClass) {
     console.error('❌ iExec DataProtector SDK not loaded! Check CDN script.');
-    console.error('Available window properties:', Object.keys(window).filter(k => k.toLowerCase().includes('iexec')));
+    console.error('📋 Checked variables: IExecDataProtector, dataProtector, iexec, IEXEC');
+    console.error('📋 Available:', customGlobals);
     alert('Error: iExec SDK not loaded. Please refresh the page.');
     return;
   }
   
   console.log('✅ Ethers.js loaded:', ethers.version);
   console.log('✅ iExec DataProtector SDK loaded');
-  console.log('✅ DataProtector available:', IExecDataProtector);
+  console.log('✅ DataProtector available:', DataProtectorClass);
+  
+  // Store the class globally for use in initialization
+  window.IExecDataProtectorClass = DataProtectorClass;
   
   // Get both buttons (navbar and hero)
   const navbarButton = document.getElementById('joinWhitelistBtn');
@@ -324,9 +341,16 @@ async function initializeIExec() {
       throw new Error('Provider not initialized. Please connect wallet first.');
     }
     
+    // Get the DataProtector class (stored during initialization)
+    const DataProtectorClass = window.IExecDataProtectorClass || window.IExecDataProtector || window.dataProtector;
+    
+    if (!DataProtectorClass) {
+      throw new Error('DataProtector class not found. SDK may not be loaded.');
+    }
+    
     // Initialize DataProtector with ethers provider
     // DataProtector includes Web3Mail functionality
-    const dataProtector = new IExecDataProtector(provider);
+    const dataProtector = new DataProtectorClass(provider);
     
     // Access the web3mail module from DataProtector
     web3mail = dataProtector.web3mail;
