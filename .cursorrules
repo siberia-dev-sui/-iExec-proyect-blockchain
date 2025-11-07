@@ -89,10 +89,11 @@ await web3mail.sendEmail({
 ```
 
 ## Network Configuration
-- **Testnet:** Polygon Mumbai (Chain ID: 80001, Hex: 0x13881)
-- **RPC URL:** https://rpc-mumbai.maticvigil.com/
-- **Block Explorer:** https://mumbai.polygonscan.com/
-- **Mainnet:** Polygon (Chain ID: 137) - NOT FOR PoC
+- **Testnet:** Arbitrum Sepolia (Chain ID: 421614, Hex: 0x66eee)
+- **RPC URL:** https://sepolia-rollup.arbitrum.io/rpc
+- **Block Explorer:** https://sepolia.arbiscan.io/
+- **Mainnet:** Arbitrum One (Chain ID: 42161) - NOT FOR PoC
+- **Note:** iExec Web3Mail officially supports Arbitrum network (see https://docs.iex.ec)
 - **App Address:** Must be obtained from iExec dashboard (configure in logic.js)
 
 ## Error Handling Strategy
@@ -104,7 +105,7 @@ await web3mail.sendEmail({
 
 ### Common Errors to Handle
 - MetaMask not installed → Redirect to download
-- Wrong network → Prompt to switch to Mumbai
+- Wrong network → Prompt to switch to Arbitrum Sepolia
 - User rejects transaction → Clear, non-technical message
 - Insufficient balance → Explain gas requirements
 - iExec API errors → Provide context and retry option
@@ -150,7 +151,7 @@ await web3mail.sendEmail({
 3. Test each iExec method independently before integration
 4. Test complete flow end-to-end
 5. Test error scenarios (rejection, wrong network, etc.)
-6. Use Polygon Mumbai testnet ONLY for PoC
+6. Use Arbitrum Sepolia testnet ONLY for PoC
 7. Verify email delivery via Web3 Mail
 
 ## Dependencies (Load via CDN)

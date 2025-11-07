@@ -11,13 +11,14 @@
 // ============================================================================
 
 const CONFIG = {
-  // Network configuration - Using Arbitrum One (iExec default network)
-  // Note: iExec Web3Mail works with default configuration - no app registration needed!
-  NETWORK_ID: 42161,
-  NETWORK_NAME: 'Arbitrum One',
-  NETWORK_HEX: '0xa4b1',
-  RPC_URL: 'https://arb1.arbitrum.io/rpc',
-  BLOCK_EXPLORER: 'https://arbiscan.io/',
+  // Network configuration - Using Arbitrum Sepolia testnet (official iExec testnet)
+  // Based on official iExec documentation: https://docs.iex.ec/protocol/proof-of-contribution
+  // iExec Web3Mail is deployed on Arbitrum network (Sepolia for testnet)
+  NETWORK_ID: 421614,
+  NETWORK_NAME: 'Arbitrum Sepolia',
+  NETWORK_HEX: '0x66eee',
+  RPC_URL: 'https://sepolia-rollup.arbitrum.io/rpc',
+  BLOCK_EXPLORER: 'https://sepolia.arbiscan.io/',
   
   // Email content for whitelist confirmation
   EMAIL_SUBJECT: 'Welcome to Quintes Protocol Whitelist',
@@ -62,6 +63,51 @@ let userAddress = null;
 let web3mail = null;
 
 // ============================================================================
+// HELPERS
+// ============================================================================
+
+/**
+ * Resolve the global constructor exposed by the iExec Web3Mail UMD bundle.
+ * Supports multiple naming variants to ensure compatibility across versions.
+ * @returns {Function|null} Constructor if available, otherwise null
+ */
+function resolveIExecConstructor() {
+  if (typeof IExecWeb3Mail !== 'undefined') {
+    return IExecWeb3Mail;
+  }
+
+  if (typeof IExecWeb3mail !== 'undefined') {
+    return IExecWeb3mail;
+  }
+
+  if (window.IExec?.Web3Mail) {
+    return window.IExec.Web3Mail;
+  }
+
+  if (window.IExec?.web3mail) {
+    return window.IExec.web3mail;
+  }
+
+  return null;
+}
+
+/**
+ * Inspect the window object for possible iExec related globals.
+ * Useful for debugging missing SDK issues.
+ * @returns {string[]} Array of global keys containing exec/web3mail
+ */
+function getPossibleIExecGlobals() {
+  if (typeof window === 'undefined') {
+    return [];
+  }
+
+  return Object.keys(window).filter((key) => {
+    const lower = key.toLowerCase();
+    return lower.includes('exec') || lower.includes('web3mail');
+  });
+}
+
+// ============================================================================
 // INITIALIZATION
 // ============================================================================
 
@@ -71,6 +117,20 @@ let web3mail = null;
 document.addEventListener('DOMContentLoaded', () => {
   console.log('🚀 Quintes Protocol - iExec Web3 Mail Integration');
   console.log('📋 Initializing...');
+
+  if (typeof ethers === 'undefined') {
+    console.error('❌ Ethers.js not detected. Ensure the CDN script is loaded in index.html');
+  } else {
+    console.log('✅ Ethers.js detected');
+  }
+
+  const detectedIExec = resolveIExecConstructor();
+  if (!detectedIExec) {
+    const candidates = getPossibleIExecGlobals();
+    console.warn('⚠️ iExec Web3Mail SDK not detected yet. Available window keys:', candidates);
+  } else {
+    console.log('✅ iExec Web3Mail SDK detected');
+  }
   
   // Get both buttons (navbar and hero)
   const navbarButton = document.getElementById('joinWhitelistBtn');
@@ -177,7 +237,7 @@ async function handleJoinWhitelist(event) {
     } else if (error.message && error.message.includes('network')) {
       alert('❌ Network Error\n\nPlease check your internet connection and try again.');
     } else if (error.message && error.message.includes('insufficient')) {
-      alert('❌ Insufficient Balance\n\nYou need some ETH on Arbitrum One network to complete this transaction.\n\nYou can bridge ETH to Arbitrum from: https://bridge.arbitrum.io/');
+      alert('❌ Insufficient Balance\n\nYou need some ETH on Arbitrum Sepolia testnet to complete this transaction.\n\nGet free testnet ETH from:\n• https://faucets.chain.link/arbitrum-sepolia\n• https://www.alchemy.com/faucets/arbitrum-sepolia');
     } else {
       alert(`❌ An error occurred:\n\n${error.message}\n\nPlease try again or contact support if the problem persists.`);
     }
@@ -224,7 +284,15 @@ async function connectWallet() {
       );
       
       if (switchNetwork) {
-        await switchToArbitrum();
+        await switchToArbitrumSepolia();
+        // Wait for MetaMask to complete the switch
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Re-initialize provider after network switch
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+        const newNetwork = await provider.getNetwork();
+        if (newNetwork.chainId !== CONFIG.NETWORK_ID) {
+          throw new Error(`Network switch failed. Please manually switch to ${CONFIG.NETWORK_NAME} in MetaMask.`);
+        }
       } else {
         throw new Error(`Please switch to ${CONFIG.NETWORK_NAME} to continue.`);
       }
@@ -242,23 +310,23 @@ async function connectWallet() {
 }
 
 /**
- * Switches to Arbitrum One mainnet (iExec's default network)
+ * Switches to Arbitrum Sepolia testnet (official iExec testnet)
  */
-async function switchToArbitrum() {
+async function switchToArbitrumSepolia() {
   try {
-    console.log('🔄 Switching to Arbitrum One...');
+    console.log('🔄 Switching to Arbitrum Sepolia testnet...');
     
     await window.ethereum.request({
       method: 'wallet_switchEthereumChain',
       params: [{ chainId: CONFIG.NETWORK_HEX }],
     });
     
-    console.log('✅ Switched to Arbitrum One');
+    console.log('✅ Switched to Arbitrum Sepolia');
     
   } catch (error) {
     // Network not added, try to add it
     if (error.code === 4902) {
-      console.log('📝 Network not found, adding Arbitrum One...');
+      console.log('📝 Network not found, adding Arbitrum Sepolia...');
       
       await window.ethereum.request({
         method: 'wallet_addEthereumChain',
@@ -275,7 +343,7 @@ async function switchToArbitrum() {
         }]
       });
       
-      console.log('✅ Arbitrum One network added');
+      console.log('✅ Arbitrum Sepolia network added');
     } else {
       throw error;
     }
@@ -298,8 +366,20 @@ async function initializeIExec() {
       throw new Error('Provider not initialized. Please connect wallet first.');
     }
     
+    const IExecConstructor = resolveIExecConstructor();
+
+    if (!IExecConstructor) {
+      const candidates = getPossibleIExecGlobals();
+      throw new Error(
+        'iExec Web3Mail SDK not loaded. Please verify the CDN script in index.html. ' +
+        (candidates.length > 0
+          ? `Detected potential globals: ${candidates.join(', ')}`
+          : 'No related globals detected.')
+      );
+    }
+
     // Initialize Web3Mail with ethers provider
-    web3mail = new IExecWeb3Mail(provider);
+    web3mail = new IExecConstructor(provider);
     
     console.log('✅ iExec SDK initialized');
     return web3mail;

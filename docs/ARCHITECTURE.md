@@ -200,7 +200,7 @@ window.ethereum?.on('chainChanged', ...) { ... }
                                ▼
                     ┌──────────────────────┐
                     │  Check Network       │
-                    │  (Polygon Mumbai?)   │
+                    │  (Arbitrum Sepolia?) │
                     └──────┬───────────────┘
                            │
                     ┌──────┴──────┐
@@ -210,7 +210,7 @@ window.ethereum?.on('chainChanged', ...) { ... }
                     ▼             ▼
             ┌───────────────┐  ┌────────────────┐
             │ Prompt Switch │  │ Alert: Step 1  │
-            │  to Mumbai    │  │   Connected!   │
+            │  to Sepolia   │  │   Connected!   │
             └───────┬───────┘  └────────┬───────┘
                     │                   │
                     └─────────┬─────────┘
@@ -302,10 +302,12 @@ const CONFIG = {
   // Get this from iExec dashboard after creating your app
   APP_ADDRESS: '0xYourAppAddressFromIExecDashboard',
   
-  // Polygon Mumbai Testnet
-  NETWORK_ID: 80001,
-  NETWORK_NAME: 'Polygon Mumbai',
-  RPC_URL: 'https://rpc-mumbai.maticvigil.com/',
+  // Arbitrum Sepolia Testnet (official iExec testnet)
+  // Based on https://docs.iex.ec/protocol/proof-of-contribution
+  NETWORK_ID: 421614,
+  NETWORK_NAME: 'Arbitrum Sepolia',
+  NETWORK_HEX: '0x66eee',
+  RPC_URL: 'https://sepolia-rollup.arbitrum.io/rpc',
   
   // Email content
   EMAIL_SUBJECT: 'Welcome to Quintes Whitelist',
@@ -437,10 +439,10 @@ await web3mail.sendEmail({
 |----------|----------|--------------|------------------|
 | Connection | MetaMask not installed | "Please install MetaMask to continue" | Redirect to metamask.io |
 | Connection | User rejects connection | "Connection rejected. Please try again." | Return to initial state |
-| Network | Wrong network | "Please switch to Polygon Mumbai" | Trigger network switch |
+| Network | Wrong network | "Please switch to Arbitrum Sepolia" | Trigger network switch |
 | Network | RPC errors | "Network error. Please check connection." | Log error, retry option |
 | iExec | API failures | "Service error. Please try again later." | Log full error, contact support |
-| iExec | Insufficient balance | "Insufficient MATIC for transaction" | Explain gas requirements |
+| iExec | Insufficient balance | "Insufficient ETH for transaction" | Explain gas requirements |
 | Validation | Invalid email | "Please enter a valid email address" | Show format example |
 | General | Unknown error | "An error occurred: [message]" | Log everything, provide details |
 
@@ -510,12 +512,13 @@ try {
 
 **Required:**
 - MetaMask extension installed
-- Polygon Mumbai RPC added to MetaMask
-- Test MATIC in wallet (get from faucet)
-- iExec app configured and address obtained
+- Arbitrum Sepolia RPC added to MetaMask
+- Test ETH in wallet (get from faucet)
+- iExec Web3Mail SDK loaded (no app registration needed for basic usage)
 
 **Faucets:**
-- Mumbai MATIC: https://faucet.polygon.technology/
+- Arbitrum Sepolia ETH: https://faucets.chain.link/arbitrum-sepolia
+- Alternative: https://www.alchemy.com/faucets/arbitrum-sepolia
 
 ---
 
@@ -626,12 +629,12 @@ vercel --prod                       # Deploy to production
 - Use environment variables for sensitive data in production
 
 ⚠️ **IMPORTANT - TESTING:**
-- Always test on Mumbai testnet first
+- Always test on Arbitrum Sepolia testnet first
 - Never test with real funds
 - Verify email delivery before client demo
 
 ⚠️ **IMPORTANT - CLIENT DEMO:**
-- Have test wallet ready with Mumbai MATIC
+- Have test wallet ready with Arbitrum Sepolia ETH
 - Test the full flow 30 minutes before demo
 - Have backup plan if network is slow
 - Prepare explanation of each step
@@ -651,8 +654,9 @@ vercel --prod                       # Deploy to production
 **MetaMask Documentation:**
 - Developer Docs: https://docs.metamask.io/
 
-**Polygon Documentation:**
-- Mumbai Testnet: https://wiki.polygon.technology/docs/develop/network-details/network/
+**Arbitrum Documentation:**
+- Arbitrum Sepolia Testnet: https://docs.arbitrum.io/for-devs/concepts/public-chains
+- Network Details: https://chainlist.org/chain/421614
 
 ---
 

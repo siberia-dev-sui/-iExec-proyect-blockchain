@@ -104,9 +104,10 @@ Create the file js/logic.js with the following structure:
 
 2. Configuration object (CONFIG) with:
    - APP_ADDRESS (placeholder: '0xYourAppAddressHere')
-   - NETWORK_ID: 80001
-   - NETWORK_NAME: 'Polygon Mumbai'
-   - RPC_URL: 'https://rpc-mumbai.maticvigil.com/'
+   - NETWORK_ID: 421614
+   - NETWORK_NAME: 'Arbitrum Sepolia'
+   - NETWORK_HEX: '0x66eee'
+   - RPC_URL: 'https://sepolia-rollup.arbitrum.io/rpc'
    - EMAIL_SUBJECT: 'Welcome to Quintes Whitelist'
    - EMAIL_CONTENT: HTML template with congratulations message
 
@@ -164,9 +165,9 @@ In js/logic.js, implement the connectWallet() function with these requirements:
 
 5. Check current network using provider.getNetwork()
 
-6. If network is NOT Mumbai (chainId 80001):
+6. If network is NOT Arbitrum Sepolia (chainId 421614):
    - Ask user via confirm() if they want to switch
-   - If yes, call switchToMumbai() helper function
+   - If yes, call switchToArbitrumSepolia() helper function
    - If no, throw error with message
 
 7. Handle error cases:
@@ -175,7 +176,7 @@ In js/logic.js, implement the connectWallet() function with these requirements:
 
 8. Return userAddress on success
 
-Also implement the switchToMumbai() helper function that:
+Also implement the switchToArbitrumSepolia() helper function that:
 - Tries wallet_switchEthereumChain first
 - If network not added (error.code === 4902), calls wallet_addEthereumChain
 - Uses configuration from CONFIG object
@@ -183,7 +184,7 @@ Also implement the switchToMumbai() helper function that:
 Add proper JSDoc comments to both functions.
 ```
 
-**Expected Output:** Fully implemented connectWallet() and switchToMumbai() functions
+**Expected Output:** Fully implemented connectWallet() and switchToArbitrumSepolia() functions
 
 **Action After:** Update logic.js with provided implementation
 
@@ -471,7 +472,7 @@ Add comments explaining why we handle each event.
 ```
 ✓ If on wrong network: prompt to switch appears
 ✓ Approve network switch in MetaMask
-✓ Mumbai network is added/switched successfully
+✓ Arbitrum Sepolia network is added/switched successfully
 ```
 
 ### Test 5: Full Flow (Requires iExec Setup)
@@ -537,7 +538,7 @@ git commit -m "feat: implement iExec Web3 Mail integration
 
 - Add Ethers.js and iExec SDK via CDN
 - Implement wallet connection with MetaMask
-- Add network switching to Mumbai
+- Add network switching to Arbitrum Sepolia
 - Integrate iExec Web3 Mail workflow
 - Add comprehensive error handling
 - Implement user feedback via alerts"
@@ -610,7 +611,7 @@ Copy message from template, paste into Upwork (or your communication platform)
 ### Step 7.3: Prepare for Demo Call
 
 - Test flow one more time
-- Have test wallet ready with Mumbai MATIC
+- Have test wallet ready with Arbitrum Sepolia ETH
 - Prepare to explain architecture
 - Have ARCHITECTURE.md open for reference
 
@@ -638,7 +639,7 @@ Copy message from template, paste into Upwork (or your communication platform)
 
 ### Issue: Transaction fails
 **Solution:**
-- Check Mumbai MATIC balance
+- Check Arbitrum Sepolia ETH balance
 - Verify correct network
 - Check APP_ADDRESS is configured
 - Review iExec dashboard for app status
