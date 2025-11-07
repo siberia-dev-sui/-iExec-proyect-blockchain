@@ -72,24 +72,6 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('🚀 Quintes Protocol - iExec Web3 Mail Integration');
   console.log('📋 Initializing...');
   
-  // Verify that required libraries are loaded
-  if (typeof ethers === 'undefined') {
-    console.error('❌ Ethers.js not loaded! Check CDN script.');
-    alert('Error: Web3 libraries not loaded. Please refresh the page.');
-    return;
-  }
-  
-  if (typeof IExecWeb3mail === 'undefined') {
-    console.error('❌ iExec Web3Mail SDK not loaded! Check CDN script.');
-    alert('Error: iExec SDK not loaded. Please refresh the page.');
-    return;
-  }
-  
-  console.log('✅ Ethers.js loaded:', ethers.version);
-  console.log('✅ iExec Web3Mail SDK loaded');
-  console.log('📍 Network:', CONFIG.NETWORK_NAME, `(Chain ID: ${CONFIG.NETWORK_ID})`);
-  console.log('🌐 Using iExec default Web3Mail configuration');
-  
   // Get both buttons (navbar and hero)
   const navbarButton = document.getElementById('joinWhitelistBtn');
   const heroButton = document.getElementById('joinWhitelistBtnHero');
@@ -316,14 +298,8 @@ async function initializeIExec() {
       throw new Error('Provider not initialized. Please connect wallet first.');
     }
     
-    // Verify SDK is loaded
-    if (typeof IExecWeb3mail === 'undefined') {
-      throw new Error('iExec Web3Mail SDK not loaded. Please refresh the page.');
-    }
-    
     // Initialize Web3Mail with ethers provider
-    // Note: The correct class name is IExecWeb3mail (lowercase 'm')
-    web3mail = new IExecWeb3mail(provider);
+    web3mail = new IExecWeb3Mail(provider);
     
     console.log('✅ iExec SDK initialized');
     return web3mail;
