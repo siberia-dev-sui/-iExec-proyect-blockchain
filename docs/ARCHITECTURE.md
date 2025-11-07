@@ -4,16 +4,18 @@
 
 **Client:** Quintes Protocol (Rand)  
 **Project Type:** Proof of Concept (PoC)  
-**Objective:** Integrate iExec Web3 Mail functionality into a Webflow landing page to demonstrate secure whitelist management  
+**Objective:** Integrate iExec Web3 Mail functionality using Backend Proxy Architecture  
+**Architecture:** Frontend (Static HTML) + Backend (Node.js/Express)  
 **Timeline:** Sprint delivery (2-3 days)  
-**Status:** In Development  
+**Status:** Complete  
 **Developer:** Hugo Mendoza
 
 ### 1.1 Business Requirements
-- User must be able to connect their Web3 wallet (MetaMask)
-- User email must be encrypted and protected using iExec technology
-- System must send automated confirmation email via Web3 Mail protocol
-- Landing page must be production-ready and professional
+- User must be able to connect their Web3 wallet (MetaMask) - **Frontend**
+- User email must be encrypted and protected using iExec technology - **Backend**
+- System must send automated confirmation email via Web3 Mail protocol - **Backend**
+- Landing page must be production-ready and professional - **Frontend**
+- Backend must handle all blockchain operations securely - **Backend**
 - Solution must demonstrate technical feasibility for full implementation
 
 ### 1.2 Success Criteria
@@ -29,37 +31,65 @@
 
 ## 2. Technical Architecture
 
-### 2.1 Tech Stack
+### 2.1 Architecture Pattern: Backend Proxy
+
+```
+┌─────────────────────────────────┐
+│       Frontend (Client)         │
+│  - Static HTML/CSS/JS           │
+│  - MetaMask integration         │
+│  - User interface               │
+│  - API consumer                 │
+└────────────┬────────────────────┘
+             │
+             │ HTTP REST API
+             │ (JSON)
+             │
+             ▼
+┌─────────────────────────────────┐
+│       Backend (Server)          │
+│  - Node.js + Express            │
+│  - iExec SDK integration        │
+│  - Blockchain transactions      │
+│  - Email encryption             │
+└─────────────────────────────────┘
+```
+
+### 2.2 Tech Stack
 
 | Component | Technology | Version | Justification |
 |-----------|-----------|---------|---------------|
-| Frontend Framework | Webflow Export | N/A | Speed of delivery, professional design, no framework overhead |
-| Web3 Library | Ethers.js | v5.7.2 | Industry standard, excellent MetaMask support, stable API |
-| iExec SDK | @iexec/web3mail | Latest | Core requirement for Web3 Mail functionality |
-| JavaScript | Vanilla JS | ES6+ | No build step, simple deployment, fast iteration |
-| Deployment Platform | Vercel | N/A | Zero-config, instant deploy, free tier, CDN included |
-| Version Control | Git + GitHub | N/A | Industry standard, required for Vercel |
-| Package Manager | None (CDN) | N/A | Simplifies deployment, no build process needed |
+| **Frontend** | Webflow Export | N/A | Professional design, no framework overhead |
+| **Frontend Web3** | MetaMask only | N/A | Simple wallet connection, no SDK needed |
+| **Backend** | Node.js + Express | v18+ / v4.18.2 | Industry standard, mature ecosystem |
+| **Backend Web3** | Ethers.js | v5.7.2 | Blockchain interactions on server |
+| **iExec SDK** | @iexec/web3mail | v7.2.3 | Core Web3 Mail functionality (backend only) |
+| **Frontend Deploy** | Vercel | N/A | Zero-config static site hosting |
+| **Backend Deploy** | Railway/Render/VPS | N/A | API server hosting with Node.js support |
+| **Version Control** | Git + GitHub | N/A | Industry standard |
 
-### 2.2 Architecture Decisions
+### 2.3 Architecture Decisions
 
-#### Why Vanilla JavaScript?
-- **Speed:** No build process, no bundler configuration
-- **Simplicity:** Direct browser execution, easy debugging
-- **Deployment:** Upload and go, no compilation step
-- **Client Understanding:** Easy to audit and understand
+#### Why Backend Proxy Architecture?
+- **Security:** Private keys never exposed to client
+- **Simplicity:** Frontend remains static, no complex SDK
+- **Scalability:** Backend can handle rate limiting, caching
+- **Separation of Concerns:** Frontend = UX, Backend = Blockchain logic
+- **Easier Deployment:** Frontend and backend deployed independently
+- **Better Error Handling:** Centralized error management on backend
 
-#### Why CDN Loading?
-- **No Dependencies:** No package.json, no node_modules
-- **Fast Loading:** Cached across sites, global CDN
-- **Version Control:** Explicit version pinning in HTML
-- **Simplicity:** Works with any web server
+#### Why Node.js Backend?
+- **JavaScript Consistency:** Same language as frontend
+- **Rich Ecosystem:** npm packages for everything
+- **iExec SDK Support:** Official iExec SDK works perfectly
+- **Express Framework:** Battle-tested, simple to use
+- **Easy Deployment:** Railway, Render, VPS all support Node.js
 
-#### Why Vercel?
+#### Why Vercel for Frontend?
 - **Zero Config:** Automatic detection of static sites
 - **Free Tier:** Perfect for PoC, no credit card needed
 - **GitHub Integration:** Auto-deploy on push
-- **Custom Domains:** Professional URLs available
+- **Global CDN:** Fast loading worldwide
 
 ---
 
@@ -71,13 +101,20 @@ iexec_work/
 ├── .gitignore                      # Git ignore patterns
 ├── README.md                       # Public project documentation
 │
+├── backend/                        # 🆕 Backend API server
+│   ├── server.js                   # Express server + iExec SDK
+│   ├── package.json                # Backend dependencies
+│   ├── .env.example                # Environment configuration template
+│   ├── .gitignore                  # Backend-specific git ignore
+│   └── README.md                   # Backend documentation
+│
 ├── docs/                           # Technical documentation
 │   ├── ARCHITECTURE.md             # This file (technical blueprint)
 │   ├── IEXEC_WEB3MAIL_DOCS.md     # iExec API reference
 │   ├── DEVELOPMENT_PLAN.md         # Step-by-step implementation guide
 │   └── DELIVERY_MESSAGE.md         # Client delivery template
 │
-├── index.html                      # Main landing page (Webflow export + modifications)
+├── index.html                      # Main landing page (simplified)
 │
 ├── css/                            # Webflow styles (DO NOT MODIFY)
 │   ├── hugos-stupendous-site-cdb0c4.webflow.css
@@ -86,86 +123,124 @@ iexec_work/
 │
 ├── js/                             # JavaScript files
 │   ├── webflow.js                  # Webflow core (DO NOT MODIFY)
-│   └── logic.js                    # NEW: Our iExec integration logic
+│   └── logic.js                    # 🔄 Updated: API consumer (no SDK)
 │
 ├── images/                         # Image assets (untouched)
 └── fonts/                          # Font files (untouched)
 ```
 
+### 3.1 Key Changes from Previous Architecture
+
+**Added:**
+- `backend/` directory with complete Node.js server
+- `backend/server.js` - Express server with API endpoints
+- `backend/package.json` - Backend dependencies
+- `backend/.env.example` - Configuration template
+
+**Modified:**
+- `js/logic.js` - Now makes HTTP calls to backend (no SDK imports)
+- `index.html` - Simplified (removed SDK imports)
+
+**Removed:**
+- SDK imports from frontend
+- Direct blockchain operations from frontend
+
 ---
 
 ## 4. Integration Points
 
-### 4.1 HTML Modifications (`index.html`)
+### 4.1 Frontend (`index.html` + `js/logic.js`)
 
-**Location 1: CDN Scripts in `<head>`**
+**Frontend Responsibilities:**
+1. ✅ Connect MetaMask wallet
+2. ✅ Collect user email
+3. ✅ Make HTTP requests to backend API
+4. ✅ Display feedback to user
+
+**HTML Structure (Simplified):**
 ```html
-<!-- Add before </head> tag (around line 19) -->
 <head>
-  <!-- ... existing Webflow tags ... -->
-  
-  <!-- Web3 Dependencies -->
-  <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js" type="text/javascript"></script>
-  <script src="https://unpkg.com/@iexec/web3mail@latest/dist/index.umd.js" type="text/javascript"></script>
+  <!-- NO SDK IMPORTS NEEDED! -->
+  <!-- Only Webflow dependencies -->
 </head>
-```
-
-**Location 2: Main CTA Button**
-```html
-<!-- Modify existing button (around line 137) to add ID -->
-<a data-w-id="800bf7d3-688d-8ca9-ce22-a1a04b064972" 
-   style="opacity:0" 
-   href="#" 
-   id="joinWhitelistBtn" 
-   class="primary-button w-button">
-   Join Whitelist
-</a>
-```
-
-**Location 3: Logic Script Reference**
-```html
-<!-- Add before </body> tag (around line 187) -->
-  <script src="js/logic.js" type="text/javascript"></script>
+<body>
+  <!-- Join Whitelist buttons -->
+  <a id="joinWhitelistBtn" ...>Join Whitelist</a>
+  <a id="joinWhitelistBtnHero" ...>Join Whitelist</a>
+  
+  <!-- Scripts -->
+  <script src="js/webflow.js"></script>
+  <script src="js/logic.js"></script>
 </body>
 ```
 
-### 4.2 Logic Implementation (`js/logic.js`)
-
-**File Structure:**
+**Frontend API Consumer (`js/logic.js`):**
 ```javascript
-// 1. Configuration object
-const CONFIG = { ... };
+// Configuration
+const CONFIG = {
+  API_URL: 'http://localhost:3001'  // Backend URL
+};
 
-// 2. State management
-let provider = null;
-let signer = null;
-let userAddress = null;
-let web3mail = null;
-
-// 3. Initialization
-document.addEventListener('DOMContentLoaded', () => { ... });
-
-// 4. Main handler
-async function handleJoinWhitelist(event) { ... }
-
-// 5. Helper functions
-async function connectWallet() { ... }
-async function initializeIExec() { ... }
-async function protectUserEmail(email) { ... }
-async function grantAppAccess(protectedData) { ... }
-async function sendConfirmationEmail(protectedData) { ... }
-
-// 6. Utility functions
-function isValidEmail(email) { ... }
-
-// 7. Event listeners
-window.ethereum?.on('accountsChanged', ...) { ... }
-window.ethereum?.on('chainChanged', ...) { ... }
+// Make API calls
+async function protectUserEmailViaAPI(email) {
+  const response = await fetch(`${CONFIG.API_URL}/api/protect-email`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email })
+  });
+  return await response.json();
+}
 ```
+
+### 4.2 Backend (`backend/server.js`)
+
+**Backend Responsibilities:**
+1. ✅ Initialize iExec SDK
+2. ✅ Handle blockchain transactions
+3. ✅ Encrypt user emails
+4. ✅ Grant access to protected data
+5. ✅ Send confirmation emails
+6. ✅ Provide RESTful API
+
+**Backend Structure:**
+```javascript
+// 1. Imports
+import express from 'express';
+import { ethers } from 'ethers';
+import { IExecWeb3mail } from '@iexec/web3mail';
+
+// 2. Initialize Express
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+// 3. Initialize blockchain
+const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
+const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
+const web3mail = new IExecWeb3mail(wallet);
+
+// 4. API Endpoints
+app.get('/health', ...);
+app.post('/api/protect-email', ...);
+app.post('/api/grant-access', ...);
+app.post('/api/send-email', ...);
+
+// 5. Start server
+app.listen(PORT);
+```
+
+**Backend API Endpoints:**
+
+| Endpoint | Method | Purpose | Request Body | Response |
+|----------|--------|---------|--------------|----------|
+| `/health` | GET | Health check | None | `{status, wallet}` |
+| `/api/protect-email` | POST | Encrypt email | `{email}` | `{protectedDataAddress, txHash}` |
+| `/api/grant-access` | POST | Grant access | `{protectedDataAddress, userAddress}` | `{success, txHash}` |
+| `/api/send-email` | POST | Send email | `{protectedDataAddress}` | `{success, taskId}` |
 
 ---
 
-## 5. User Flow (Detailed)
+## 5. User Flow (Backend Proxy Architecture)
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -179,7 +254,7 @@ window.ethereum?.on('chainChanged', ...) { ... }
                             │
                             ▼
             ┌───────────────────────────────┐
-            │   Check MetaMask Installed    │
+            │   Frontend: Check MetaMask    │
             └───────────┬───────────────────┘
                         │
                 ┌───────┴────────┐
@@ -187,92 +262,109 @@ window.ethereum?.on('chainChanged', ...) { ... }
             NO  │                │  YES
                 │                │
                 ▼                ▼
-        ┌────────────┐   ┌──────────────────┐
-        │   Alert:   │   │ Request Account  │
-        │  Install   │   │   Connection     │
-        │  MetaMask  │   └────────┬─────────┘
-        └────────────┘            │
-                                  ▼
-                    ┌──────────────────────────┐
-                    │ User Approves in MetaMask│
-                    └──────────┬───────────────┘
-                               │
-                               ▼
-                    ┌──────────────────────┐
-                    │  Check Network       │
-                    │  (Arbitrum Sepolia?) │
-                    └──────┬───────────────┘
-                           │
-                    ┌──────┴──────┐
-                    │             │
-                WRONG│             │CORRECT
-                    │             │
-                    ▼             ▼
-            ┌───────────────┐  ┌────────────────┐
-            │ Prompt Switch │  │ Alert: Step 1  │
-            │  to Sepolia   │  │   Connected!   │
-            └───────┬───────┘  └────────┬───────┘
-                    │                   │
-                    └─────────┬─────────┘
-                              │
-                              ▼
-                ┌──────────────────────────┐
-                │ Alert: Step 2            │
-                │ Initialize iExec SDK     │
-                └──────────┬───────────────┘
-                           │
-                           ▼
-                ┌──────────────────────────┐
-                │ Prompt: Enter Email      │
-                └──────────┬───────────────┘
-                           │
-                           ▼
-                ┌──────────────────────────┐
-                │ Validate Email Format    │
-                └──────────┬───────────────┘
-                           │
-                    ┌──────┴──────┐
-                    │             │
-                INVALID│           │VALID
-                    │             │
-                    ▼             ▼
-            ┌──────────────┐  ┌──────────────────┐
-            │ Alert: Try   │  │ Alert: Step 3    │
-            │    Again     │  │ Protecting Data  │
-            └──────────────┘  └────────┬─────────┘
-                                       │
-                                       ▼
-                            ┌──────────────────────┐
-                            │ iExec: protectData() │
-                            └──────────┬───────────┘
-                                       │
-                                       ▼
-                            ┌──────────────────────┐
-                            │ Alert: Step 4        │
-                            │ Granting Access      │
-                            └──────────┬───────────┘
-                                       │
-                                       ▼
-                            ┌──────────────────────┐
-                            │ iExec: grantAccess() │
-                            └──────────┬───────────┘
-                                       │
-                                       ▼
-                            ┌──────────────────────┐
-                            │ Alert: Step 5        │
-                            │ Sending Email        │
-                            └──────────┬───────────┘
-                                       │
-                                       ▼
-                            ┌──────────────────────┐
-                            │ iExec: sendEmail()   │
-                            └──────────┬───────────┘
-                                       │
-                                       ▼
-                            ┌──────────────────────┐
-                            │ Alert: SUCCESS! 🎉   │
-                            │ Check Your Email     │
-                            └──────────────────────┘
+        ┌────────────┐   ┌──────────────────────┐
+        │   Alert:   │   │ Frontend: Connect     │
+        │  Install   │   │  MetaMask Wallet      │
+        │  MetaMask  │   └──────────┬───────────┘
+        └────────────┘               │
+                                     ▼
+                         ┌────────────────────────┐
+                         │ Frontend: Prompt Email │
+                         └──────────┬─────────────┘
+                                    │
+                                    ▼
+                         ┌────────────────────────┐
+                         │ Frontend: Validate     │
+                         └──────────┬─────────────┘
+                                    │
+                                    ▼
+                         ┌────────────────────────┐
+                         │ Frontend → Backend:    │
+                         │ POST /api/protect-email│
+                         └──────────┬─────────────┘
+                                    │
+                                    ▼
+                         ┌────────────────────────┐
+                         │ Backend: Call iExec    │
+                         │  protectData()         │
+                         └──────────┬─────────────┘
+                                    │
+                                    ▼
+                         ┌────────────────────────┐
+                         │ Frontend → Backend:    │
+                         │ POST /api/grant-access │
+                         └──────────┬─────────────┘
+                                    │
+                                    ▼
+                         ┌────────────────────────┐
+                         │ Backend: Call iExec    │
+                         │  grantAccess()         │
+                         └──────────┬─────────────┘
+                                    │
+                                    ▼
+                         ┌────────────────────────┐
+                         │ Frontend → Backend:    │
+                         │ POST /api/send-email   │
+                         └──────────┬─────────────┘
+                                    │
+                                    ▼
+                         ┌────────────────────────┐
+                         │ Backend: Call iExec    │
+                         │  sendEmail()           │
+                         └──────────┬─────────────┘
+                                    │
+                                    ▼
+                         ┌────────────────────────┐
+                         │ Frontend: SUCCESS! 🎉  │
+                         │  Check Your Email      │
+                         └────────────────────────┘
+```
+
+### 5.1 Sequence Diagram
+
+```
+Frontend          Backend          iExec SDK       Blockchain
+   │                 │                 │                │
+   │ 1. Connect      │                 │                │
+   │   MetaMask      │                 │                │
+   │─────────────────────────────────────────────────> │
+   │                 │                 │                │
+   │ 2. POST         │                 │                │
+   │   /protect-email│                 │                │
+   │────────────────>│                 │                │
+   │                 │ 3. protectData()│                │
+   │                 │────────────────>│                │
+   │                 │                 │ 4. TX          │
+   │                 │                 │───────────────>│
+   │                 │ 5. Protected    │                │
+   │                 │    Address      │                │
+   │                 │<────────────────│                │
+   │ 6. Response     │                 │                │
+   │<────────────────│                 │                │
+   │                 │                 │                │
+   │ 7. POST         │                 │                │
+   │   /grant-access │                 │                │
+   │────────────────>│                 │                │
+   │                 │ 8. grantAccess()│                │
+   │                 │────────────────>│                │
+   │                 │                 │ 9. TX          │
+   │                 │                 │───────────────>│
+   │ 10. Response    │                 │                │
+   │<────────────────│                 │                │
+   │                 │                 │                │
+   │ 11. POST        │                 │                │
+   │    /send-email  │                 │                │
+   │────────────────>│                 │                │
+   │                 │ 12. sendEmail() │                │
+   │                 │────────────────>│                │
+   │                 │                 │ 13. TX         │
+   │                 │                 │───────────────>│
+   │ 14. Success     │                 │                │
+   │<────────────────│                 │                │
+   │                 │                 │                │
+   │ 15. Show        │                 │                │
+   │     Success     │                 │                │
+   │                 │                 │                │
 ```
 
 ### 5.1 Error Paths
@@ -525,48 +617,116 @@ try {
 ## 9. Deployment Strategy
 
 ### 9.1 Pre-Deployment Checklist
-- [ ] All code is committed to Git
-- [ ] .gitignore is configured (no sensitive data)
-- [ ] README.md is complete
-- [ ] All documentation is up to date
-- [ ] Local testing is complete
-- [ ] iExec app address is configured
 
-### 9.2 Git Workflow
+**Backend:**
+- [ ] Backend wallet created and funded with testnet ETH
+- [ ] `.env` configured with PRIVATE_KEY
+- [ ] Dependencies installed (`npm install`)
+- [ ] Backend tested locally
+- [ ] No sensitive data committed to Git
+
+**Frontend:**
+- [ ] `CONFIG.API_URL` updated to production backend URL
+- [ ] All code committed to Git
+- [ ] README.md updated
+- [ ] Documentation complete
+
+### 9.2 Backend Deployment
+
+#### Option 1: Railway (Recommended)
 ```bash
-# Initialize repo (if not done)
-git init
-
-# Add all files
+# 1. Push to GitHub
 git add .
+git commit -m "feat: backend proxy architecture"
+git push
 
-# Commit with semantic message
-git commit -m "feat: implement iExec Web3 Mail integration"
-
-# Create GitHub repository and link
-git remote add origin https://github.com/yourusername/quintes-poc.git
-
-# Push to GitHub
-git branch -M main
-git push -u origin main
+# 2. Go to railway.app
+# 3. Create new project → Deploy from GitHub
+# 4. Select backend directory as root
+# 5. Add environment variables:
+#    PORT=3001
+#    PRIVATE_KEY=your_key
+#    RPC_URL=https://sepolia-rollup.arbitrum.io/rpc
+#    NETWORK_ID=421614
+# 6. Deploy!
 ```
 
-### 9.3 Vercel Deployment
-1. Go to vercel.com and sign in with GitHub
-2. Click "Import Project"
-3. Select your GitHub repository
-4. Vercel auto-detects static site
-5. Click "Deploy"
-6. Wait ~30 seconds
-7. Get live URL: `https://your-project.vercel.app`
+#### Option 2: Render
+1. Go to render.com
+2. Create Web Service
+3. Connect GitHub repo
+4. Root Directory: `backend`
+5. Build Command: `npm install`
+6. Start Command: `npm start`
+7. Add environment variables
+8. Deploy
+
+#### Option 3: VPS
+```bash
+# SSH into VPS
+ssh user@your-server.com
+
+# Install Node.js
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# Clone and setup
+git clone <repo>
+cd backend
+npm install
+
+# Configure environment
+nano .env
+
+# Install PM2
+sudo npm install -g pm2
+
+# Start
+pm2 start server.js --name iexec-backend
+pm2 startup
+pm2 save
+```
+
+### 9.3 Frontend Deployment (Vercel)
+
+```bash
+# 1. Update backend URL in js/logic.js
+const CONFIG = {
+  API_URL: 'https://your-backend-url.com',
+  // ...
+};
+
+# 2. Commit changes
+git add .
+git commit -m "feat: update backend URL for production"
+git push
+
+# 3. Go to vercel.com
+# 4. Import GitHub repository
+# 5. Root Directory: . (root)
+# 6. Deploy!
+```
 
 ### 9.4 Post-Deployment Verification
+
+**Backend:**
+- [ ] Visit `https://your-backend-url.com/health`
+- [ ] Verify wallet address in response
+- [ ] Check backend logs
+- [ ] Test API endpoints with curl
+
+**Frontend:**
 - [ ] Visit live URL
-- [ ] Test MetaMask connection on live site
-- [ ] Test full flow on live site
+- [ ] Test MetaMask connection
+- [ ] Complete full whitelist flow
 - [ ] Verify email delivery
-- [ ] Check console for errors
+- [ ] Check browser console for errors
 - [ ] Test on mobile device
+
+**Integration:**
+- [ ] Verify frontend → backend communication
+- [ ] Check CORS headers
+- [ ] Monitor backend logs during frontend testing
 
 ---
 

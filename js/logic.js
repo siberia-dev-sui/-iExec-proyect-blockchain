@@ -1,98 +1,34 @@
 /**
- * iExec Web3 Mail Integration Logic
- * Version: 2.0.0 - ES Modules
- * Purpose: Handles wallet connection and Web3 Mail workflow for Quintes Protocol whitelist
+ * iExec Web3 Mail Integration Logic - Frontend
+ * Version: 3.0.0 - Backend Proxy Architecture
+ * Purpose: Handles wallet connection and communicates with backend API
  * 
- * Flow: Connect Wallet → Init iExec → Protect Email → Grant Access → Send Confirmation
+ * Flow: Connect Wallet → Call Backend API → Display Results
+ * Backend handles all iExec SDK operations
  */
-
-// Import dependencies using ES Modules
-import * as ethers from 'ethers';
-import { IExecWeb3mail } from '@iexec/web3mail';
 
 // ============================================================================
 // CONFIGURATION
 // ============================================================================
 
 const CONFIG = {
-  // Network configuration - Using Arbitrum Sepolia testnet (official iExec testnet)
-  // Based on official iExec documentation: https://docs.iex.ec/protocol/proof-of-contribution
-  // iExec Web3Mail is deployed on Arbitrum network (Sepolia for testnet)
+  // Backend API URL (adjust for production)
+  API_URL: 'http://localhost:3001',
+  
+  // Network configuration (for wallet connection verification)
   NETWORK_ID: 421614,
   NETWORK_NAME: 'Arbitrum Sepolia',
   NETWORK_HEX: '0x66eee',
   RPC_URL: 'https://sepolia-rollup.arbitrum.io/rpc',
-  BLOCK_EXPLORER: 'https://sepolia.arbiscan.io/',
-  
-  // Email content for whitelist confirmation
-  EMAIL_SUBJECT: 'Welcome to Quintes Protocol Whitelist',
-  EMAIL_CONTENT: `
-    <html>
-      <body style="font-family: Arial, sans-serif; background: #000; color: #fff; padding: 40px;">
-        <div style="max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #CDFA50; font-size: 32px; margin-bottom: 20px;">
-            🎉 Welcome to Quintes Protocol!
-          </h1>
-          <p style="font-size: 18px; line-height: 1.6; margin-bottom: 20px;">
-            Congratulations! Your spot on the Quintes Protocol whitelist is secured.
-          </p>
-          <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
-            You're now among the first to experience the next generation of Web3 communication 
-            powered by iExec's decentralized email technology.
-          </p>
-          <div style="background: #1a1a1a; padding: 20px; border-radius: 8px; margin: 30px 0; border: 2px solid #CDFA50;">
-            <p style="margin: 0; font-size: 14px; color: #CDFA50;">
-              <strong>What's Next?</strong>
-            </p>
-            <p style="margin: 10px 0 0 0; font-size: 14px;">
-              We'll keep you updated on our launch. Stay tuned for exciting announcements!
-            </p>
-          </div>
-          <p style="font-size: 14px; color: #888; margin-top: 40px;">
-            This email was sent via Web3 Mail - decentralized, encrypted, and secure.
-          </p>
-        </div>
-      </body>
-    </html>
-  `
+  BLOCK_EXPLORER: 'https://sepolia.arbiscan.io/'
 };
 
 // ============================================================================
 // STATE MANAGEMENT
 // ============================================================================
 
-let provider = null;
-let signer = null;
 let userAddress = null;
-let web3mail = null;
-
-// ============================================================================
-// HELPERS
-// ============================================================================
-
-/**
- * Resolve the iExec constructor - simplified for ES Modules.
- * @returns {Function} Constructor
- */
-function resolveIExecConstructor() {
-  return IExecWeb3mail;
-}
-
-/**
- * Inspect the window object for possible iExec related globals.
- * Useful for debugging missing SDK issues.
- * @returns {string[]} Array of global keys containing exec/web3mail
- */
-function getPossibleIExecGlobals() {
-  if (typeof window === 'undefined') {
-    return [];
-  }
-
-  return Object.keys(window).filter((key) => {
-    const lower = key.toLowerCase();
-    return lower.includes('exec') || lower.includes('web3mail');
-  });
-}
+let protectedDataAddress = null;
 
 // ============================================================================
 // INITIALIZATION
@@ -102,12 +38,9 @@ function getPossibleIExecGlobals() {
  * Initialize the application when DOM is ready
  */
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('🚀 Quintes Protocol - iExec Web3 Mail Integration');
+  console.log('🚀 Quintes Protocol - iExec Web3 Mail Integration (Backend Proxy)');
   console.log('📋 Initializing...');
-
-  // Verify ES Module imports loaded correctly
-  console.log('✅ Ethers.js imported (ES Module)');
-  console.log('✅ iExec Web3Mail SDK imported (ES Module)');
+  console.log('🔗 Backend API:', CONFIG.API_URL);
   
   // Get both buttons (navbar and hero)
   const navbarButton = document.getElementById('joinWhitelistBtn');
@@ -127,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.warn('⚠️ Hero button not found');
   }
   
-  console.log('✅ iExec integration initialized successfully');
+  console.log('✅ Frontend initialized successfully');
 });
 
 // ============================================================================
@@ -136,13 +69,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /**
  * Main handler for the Join Whitelist button
- * Orchestrates the complete Web3 Mail flow
+ * Orchestrates the complete Web3 Mail flow via backend API
  */
 async function handleJoinWhitelist(event) {
   event.preventDefault();
   console.log('🎯 Join Whitelist clicked');
   
-  // Check MetaMask availability first
+  // Check MetaMask availability
   if (!window.ethereum) {
     alert('MetaMask is not installed.\n\nPlease install MetaMask to continue.\n\nYou will be redirected to the download page.');
     window.open('https://metamask.io/download/', '_blank');
@@ -157,15 +90,8 @@ async function handleJoinWhitelist(event) {
     alert(`✅ Connected Successfully!\n\nYour public address: ${userAddress.substring(0, 6)}...${userAddress.substring(38)}\n\n✓ Your funds are safe\n✓ Only your public ID was shared`);
     console.log('✅ Step 1 complete: Wallet connected');
     
-    // STEP 2: Initialize iExec
-    console.log('📍 Step 2: Initializing iExec SDK...');
-    alert('Step 2: Initializing iExec Web3 Mail...\n\nPlease wait a moment.');
-    await initializeIExec();
-    alert('✅ iExec initialized successfully!');
-    console.log('✅ Step 2 complete: iExec initialized');
-    
-    // STEP 3: Get user email
-    console.log('📍 Step 3: Requesting email...');
+    // STEP 2: Get user email
+    console.log('📍 Step 2: Requesting email...');
     const userEmail = prompt('Please enter your email address to join the whitelist:');
     
     if (!userEmail) {
@@ -182,27 +108,27 @@ async function handleJoinWhitelist(event) {
     
     console.log('📧 Email provided:', userEmail);
     
-    // STEP 4: Protect email data
-    console.log('📍 Step 4: Protecting email data...');
-    alert('🔒 STEP 3: Encrypt Your Email\n\n📝 What happens next:\n✓ Your email will be ENCRYPTED on blockchain\n✓ Only you and authorized apps can read it\n✓ This requires a small gas fee (~$0.01)\n\n💡 Why? You\'re paying for YOUR privacy, not giving us access.\n\nMetaMask will ask you to approve this encryption transaction.');
-    const protectedData = await protectUserEmail(userEmail);
-    alert('✅ Email Encrypted Successfully!\n\n🔐 Your email is now protected on blockchain\n✓ Encrypted with iExec technology\n✓ Only accessible with your permission');
-    console.log('✅ Step 4 complete: Data protected');
-    console.log('🔒 Protected data address:', protectedData.address);
+    // STEP 3: Protect email data (via backend)
+    console.log('📍 Step 3: Protecting email data (calling backend API)...');
+    alert('🔒 STEP 2: Encrypt Your Email\n\n📝 What happens next:\n✓ Your email will be ENCRYPTED by our backend\n✓ Only you and authorized apps can read it\n✓ This is handled securely on our servers\n\n💡 Your email is protected with blockchain technology.');
+    protectedDataAddress = await protectUserEmailViaAPI(userEmail);
+    alert('✅ Email Encrypted Successfully!\n\n🔐 Your email is now protected\n✓ Encrypted with iExec technology\n✓ Only accessible with your permission');
+    console.log('✅ Step 3 complete: Data protected');
+    console.log('🔒 Protected data address:', protectedDataAddress);
     
-    // STEP 5: Grant access to app
-    console.log('📍 Step 5: Granting access...');
-    alert('✉️ STEP 4: Grant Email Permission\n\n📝 What this does:\n✓ Allows Quintes Protocol to send YOU emails\n✓ They can NOT see your email address\n✓ They can NOT sell your data\n✓ Small gas fee (~$0.01)\n\n💡 You\'re in control: You can revoke this anytime.\n\nMetaMask will ask for approval.');
-    await grantAppAccess(protectedData);
+    // STEP 4: Grant access to app (via backend)
+    console.log('📍 Step 4: Granting access (calling backend API)...');
+    alert('✉️ STEP 3: Grant Email Permission\n\n📝 What this does:\n✓ Allows Quintes Protocol to send YOU emails\n✓ They can NOT see your email address\n✓ They can NOT sell your data\n\n💡 You\'re in control: You can revoke this anytime.');
+    await grantAppAccessViaAPI();
     alert('✅ Permission Granted!\n\n✓ Quintes Protocol can now send you updates\n✓ Your email remains private and encrypted\n✓ You control this permission');
-    console.log('✅ Step 5 complete: Access granted');
+    console.log('✅ Step 4 complete: Access granted');
     
-    // STEP 6: Send confirmation email
-    console.log('📍 Step 6: Sending confirmation email...');
-    alert('📨 STEP 5: Send Welcome Email\n\n📝 Final step:\n✓ Sending your whitelist confirmation\n✓ This uses Web3 Mail (decentralized)\n✓ Small gas fee (~$0.01)\n\n💡 After this, you\'re done!\n\nMetaMask will ask for final approval.');
-    await sendConfirmationEmail(protectedData);
+    // STEP 5: Send confirmation email (via backend)
+    console.log('📍 Step 5: Sending confirmation email (calling backend API)...');
+    alert('📨 STEP 4: Send Welcome Email\n\n📝 Final step:\n✓ Sending your whitelist confirmation\n✓ This uses Web3 Mail (decentralized)\n\n💡 After this, you\'re done!');
+    await sendConfirmationEmailViaAPI();
     alert('🎉 SUCCESS! You\'re on the Whitelist!\n\n✅ Confirmation email sent via Web3 Mail\n📧 Check your inbox in 1-2 minutes\n🔐 All data encrypted and secure\n\nWelcome to Quintes Protocol!');
-    console.log('✅ Step 6 complete: Email sent');
+    console.log('✅ Step 5 complete: Email sent');
     console.log('🎉 COMPLETE: User successfully added to whitelist');
     
   } catch (error) {
@@ -213,8 +139,8 @@ async function handleJoinWhitelist(event) {
       alert('❌ Transaction rejected\n\nYou rejected the transaction in MetaMask.\n\nPlease try again if you want to join the whitelist.');
     } else if (error.message && error.message.includes('network')) {
       alert('❌ Network Error\n\nPlease check your internet connection and try again.');
-    } else if (error.message && error.message.includes('insufficient')) {
-      alert('❌ Insufficient Balance\n\nYou need some ETH on Arbitrum Sepolia testnet to complete this transaction.\n\nGet free testnet ETH from:\n• https://faucets.chain.link/arbitrum-sepolia\n• https://www.alchemy.com/faucets/arbitrum-sepolia');
+    } else if (error.message && error.message.includes('backend')) {
+      alert('❌ Backend Service Error\n\nThe backend service is not responding.\n\nPlease make sure the backend server is running on ' + CONFIG.API_URL);
     } else {
       alert(`❌ An error occurred:\n\n${error.message}\n\nPlease try again or contact support if the problem persists.`);
     }
@@ -226,7 +152,7 @@ async function handleJoinWhitelist(event) {
 // ============================================================================
 
 /**
- * Connects to MetaMask wallet and initializes provider
+ * Connects to MetaMask wallet
  * @returns {Promise<string>} User's wallet address
  */
 async function connectWallet() {
@@ -242,19 +168,16 @@ async function connectWallet() {
       throw new Error('No accounts found. Please unlock MetaMask.');
     }
     
-    // Initialize ethers provider
-    provider = new ethers.providers.Web3Provider(window.ethereum);
-    signer = provider.getSigner();
     userAddress = accounts[0];
-    
-    console.log('✅ Provider initialized');
+    console.log('✅ Wallet connected');
     console.log('👤 User address:', userAddress);
     
     // Check network
-    const network = await provider.getNetwork();
-    console.log('🌐 Current network:', network.chainId, network.name);
+    const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+    const currentChainId = parseInt(chainId, 16);
+    console.log('🌐 Current network:', currentChainId);
     
-    if (network.chainId !== CONFIG.NETWORK_ID) {
+    if (currentChainId !== CONFIG.NETWORK_ID) {
       console.log('⚠️ Wrong network detected, prompting switch...');
       const switchNetwork = confirm(
         `You're connected to the wrong network.\n\nPlease switch to ${CONFIG.NETWORK_NAME} to continue.\n\nClick OK to switch networks.`
@@ -262,14 +185,6 @@ async function connectWallet() {
       
       if (switchNetwork) {
         await switchToArbitrumSepolia();
-        // Wait for MetaMask to complete the switch
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        // Re-initialize provider after network switch
-        provider = new ethers.providers.Web3Provider(window.ethereum);
-        const newNetwork = await provider.getNetwork();
-        if (newNetwork.chainId !== CONFIG.NETWORK_ID) {
-          throw new Error(`Network switch failed. Please manually switch to ${CONFIG.NETWORK_NAME} in MetaMask.`);
-        }
       } else {
         throw new Error(`Please switch to ${CONFIG.NETWORK_NAME} to continue.`);
       }
@@ -287,7 +202,7 @@ async function connectWallet() {
 }
 
 /**
- * Switches to Arbitrum Sepolia testnet (official iExec testnet)
+ * Switches to Arbitrum Sepolia testnet
  */
 async function switchToArbitrumSepolia() {
   try {
@@ -328,138 +243,144 @@ async function switchToArbitrumSepolia() {
 }
 
 // ============================================================================
-// iEXEC INTEGRATION
+// BACKEND API CALLS
 // ============================================================================
 
 /**
- * Initializes the iExec Web3 Mail SDK
- * @returns {Promise<Object>} Initialized web3mail instance
- */
-async function initializeIExec() {
-  try {
-    console.log('🔧 Initializing iExec SDK...');
-    
-    if (!provider) {
-      throw new Error('Provider not initialized. Please connect wallet first.');
-    }
-    
-    const IExecConstructor = resolveIExecConstructor();
-
-    if (!IExecConstructor) {
-      const candidates = getPossibleIExecGlobals();
-      throw new Error(
-        'iExec Web3Mail SDK not loaded. Please verify the CDN script in index.html. ' +
-        (candidates.length > 0
-          ? `Detected potential globals: ${candidates.join(', ')}`
-          : 'No related globals detected.')
-      );
-    }
-
-    // Initialize Web3Mail with ethers provider
-    web3mail = new IExecConstructor(provider);
-    
-    console.log('✅ iExec SDK initialized');
-    return web3mail;
-    
-  } catch (error) {
-    console.error('❌ iExec initialization failed:', error);
-    throw new Error(`Failed to initialize iExec: ${error.message}`);
-  }
-}
-
-/**
- * Protects user email using iExec encryption
+ * Protects user email via backend API
  * @param {string} email - User's email address
- * @returns {Promise<Object>} Protected data object with address property
+ * @returns {Promise<string>} Protected data address
  */
-async function protectUserEmail(email) {
+async function protectUserEmailViaAPI(email) {
   try {
-    console.log('🔒 Protecting email:', email);
+    console.log('🔒 Calling backend API to protect email...');
     
-    if (!web3mail) {
-      throw new Error('iExec not initialized. Please initialize first.');
-    }
-    
-    const protectedData = await web3mail.protectData({
-      data: { email: email }
+    const response = await fetch(`${CONFIG.API_URL}/api/protect-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email })
     });
     
-    console.log('✅ Email protected');
-    console.log('📦 Protected data:', protectedData);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to protect email');
+    }
     
-    return protectedData;
+    const data = await response.json();
+    
+    if (!data.success || !data.protectedDataAddress) {
+      throw new Error('Invalid response from backend');
+    }
+    
+    console.log('✅ Email protected via backend');
+    console.log('📦 Protected data address:', data.protectedDataAddress);
+    
+    return data.protectedDataAddress;
     
   } catch (error) {
-    console.error('❌ Email protection failed:', error);
-    throw new Error(`Failed to protect email: ${error.message}`);
+    console.error('❌ Backend API error (protect-email):', error);
+    if (error.message === 'Failed to fetch') {
+      throw new Error('Cannot connect to backend service. Please ensure the backend is running.');
+    }
+    throw error;
   }
 }
 
 /**
- * Grants application access to encrypted data
- * Uses iExec's default Web3Mail configuration
- * @param {Object} protectedData - Protected data object from protectUserEmail
+ * Grants app access via backend API
  * @returns {Promise<void>}
  */
-async function grantAppAccess(protectedData) {
+async function grantAppAccessViaAPI() {
   try {
-    console.log('🔑 Granting access...');
-    console.log('📍 Protected data address:', protectedData.address);
-    console.log('📍 User address:', userAddress);
-    console.log('📝 Using iExec default Web3Mail whitelist');
+    console.log('🔑 Calling backend API to grant access...');
     
-    if (!web3mail) {
-      throw new Error('iExec not initialized. Please initialize first.');
+    if (!protectedDataAddress) {
+      throw new Error('Protected data address not available');
     }
     
-    if (!protectedData || !protectedData.address) {
-      throw new Error('Invalid protected data. Please protect data first.');
+    if (!userAddress) {
+      throw new Error('User address not available');
     }
     
-    // Grant access using default iExec Web3Mail configuration
-    // No need to specify authorizedApp - uses iExec's default whitelist
-    await web3mail.grantAccess({
-      protectedData: protectedData.address,
-      authorizedUser: userAddress
+    const response = await fetch(`${CONFIG.API_URL}/api/grant-access`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        protectedDataAddress: protectedDataAddress,
+        userAddress: userAddress
+      })
     });
     
-    console.log('✅ Access granted successfully');
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to grant access');
+    }
+    
+    const data = await response.json();
+    
+    if (!data.success) {
+      throw new Error('Invalid response from backend');
+    }
+    
+    console.log('✅ Access granted via backend');
     
   } catch (error) {
-    console.error('❌ Grant access failed:', error);
-    throw new Error(`Failed to grant access: ${error.message}`);
+    console.error('❌ Backend API error (grant-access):', error);
+    if (error.message === 'Failed to fetch') {
+      throw new Error('Cannot connect to backend service. Please ensure the backend is running.');
+    }
+    throw error;
   }
 }
 
 /**
- * Sends confirmation email via Web3 Mail
- * @param {Object} protectedData - Protected data object
+ * Sends confirmation email via backend API
  * @returns {Promise<void>}
  */
-async function sendConfirmationEmail(protectedData) {
+async function sendConfirmationEmailViaAPI() {
   try {
-    console.log('📨 Sending confirmation email...');
-    console.log('📍 Protected data address:', protectedData.address);
+    console.log('📨 Calling backend API to send email...');
     
-    if (!web3mail) {
-      throw new Error('iExec not initialized. Please initialize first.');
+    if (!protectedDataAddress) {
+      throw new Error('Protected data address not available');
     }
     
-    if (!protectedData || !protectedData.address) {
-      throw new Error('Invalid protected data. Please protect data first.');
-    }
-    
-    await web3mail.sendEmail({
-      protectedData: protectedData.address,
-      emailSubject: CONFIG.EMAIL_SUBJECT,
-      emailContent: CONFIG.EMAIL_CONTENT
+    const response = await fetch(`${CONFIG.API_URL}/api/send-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        protectedDataAddress: protectedDataAddress
+      })
     });
     
-    console.log('✅ Confirmation email sent successfully');
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to send email');
+    }
+    
+    const data = await response.json();
+    
+    if (!data.success) {
+      throw new Error('Invalid response from backend');
+    }
+    
+    console.log('✅ Email sent via backend');
+    if (data.taskId) {
+      console.log('📋 Task ID:', data.taskId);
+    }
     
   } catch (error) {
-    console.error('❌ Send email failed:', error);
-    throw new Error(`Failed to send email: ${error.message}`);
+    console.error('❌ Backend API error (send-email):', error);
+    if (error.message === 'Failed to fetch') {
+      throw new Error('Cannot connect to backend service. Please ensure the backend is running.');
+    }
+    throw error;
   }
 }
 
@@ -484,23 +405,21 @@ function isValidEmail(email) {
 /**
  * Listen for account changes
  */
-window.ethereum?.on('accountsChanged', (accounts) => {
+window.ethereum?.addEventListener('accountsChanged', (accounts) => {
   console.log('🔄 Account changed:', accounts[0]);
   userAddress = accounts[0];
   
   if (!accounts || accounts.length === 0) {
     console.log('⚠️ No accounts found, please connect wallet');
-    provider = null;
-    signer = null;
     userAddress = null;
-    web3mail = null;
+    protectedDataAddress = null;
   }
 });
 
 /**
  * Listen for network changes
  */
-window.ethereum?.on('chainChanged', (chainId) => {
+window.ethereum?.addEventListener('chainChanged', (chainId) => {
   console.log('🔄 Network changed to:', chainId);
   console.log('🔄 Reloading page...');
   window.location.reload();
@@ -510,12 +429,12 @@ window.ethereum?.on('chainChanged', (chainId) => {
 // DEBUG INFO
 // ============================================================================
 
-console.log('📋 iExec Web3Mail Configuration:', {
+console.log('📋 Configuration:', {
+  apiUrl: CONFIG.API_URL,
   network: CONFIG.NETWORK_NAME,
   chainId: CONFIG.NETWORK_ID,
-  mode: 'Default iExec Configuration (No app registration required)'
+  architecture: 'Backend Proxy'
 });
 
-console.log('✨ Using iExec default Web3Mail whitelist');
-console.log('🎬 Ready to join whitelist!');
-
+console.log('✨ Frontend ready!');
+console.log('🎬 Click "Join Whitelist" to start!');
