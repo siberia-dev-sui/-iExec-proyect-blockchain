@@ -81,24 +81,20 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Debug: Log all iExec-related globals to find the correct variable name
   console.log('🔍 Debugging iExec globals:');
-  console.log('- IExecWeb3Mail:', typeof IExecWeb3Mail);
-  console.log('- IExecWeb3mail:', typeof IExecWeb3mail);
-  console.log('- window.IExec:', typeof window.IExec);
+  console.log('- IExecDataProtector:', typeof IExecDataProtector);
   console.log('- window.IExecDataProtector:', typeof window.IExecDataProtector);
   
-  // Check multiple possible global variable names
-  const iExecGlobal = window.IExecWeb3Mail || window.IExecWeb3mail || window.IExec?.web3mail || window.IExec;
-  
-  if (!iExecGlobal) {
-    console.error('❌ iExec Web3Mail SDK not loaded! Check CDN script.');
+  // Check if DataProtector is available
+  if (typeof IExecDataProtector === 'undefined') {
+    console.error('❌ iExec DataProtector SDK not loaded! Check CDN script.');
     console.error('Available window properties:', Object.keys(window).filter(k => k.toLowerCase().includes('iexec')));
     alert('Error: iExec SDK not loaded. Please refresh the page.');
     return;
   }
   
   console.log('✅ Ethers.js loaded:', ethers.version);
-  console.log('✅ iExec Web3Mail SDK loaded');
-  console.log('✅ Using global:', iExecGlobal);
+  console.log('✅ iExec DataProtector SDK loaded');
+  console.log('✅ DataProtector available:', IExecDataProtector);
   
   // Get both buttons (navbar and hero)
   const navbarButton = document.getElementById('joinWhitelistBtn');
@@ -317,21 +313,27 @@ async function switchToArbitrum() {
 // ============================================================================
 
 /**
- * Initializes the iExec Web3 Mail SDK
+ * Initializes the iExec DataProtector SDK (includes Web3 Mail)
  * @returns {Promise<Object>} Initialized web3mail instance
  */
 async function initializeIExec() {
   try {
-    console.log('🔧 Initializing iExec SDK...');
+    console.log('🔧 Initializing iExec DataProtector SDK...');
     
     if (!provider) {
       throw new Error('Provider not initialized. Please connect wallet first.');
     }
     
-    // Initialize Web3Mail with ethers provider
-    web3mail = new IExecWeb3Mail(provider);
+    // Initialize DataProtector with ethers provider
+    // DataProtector includes Web3Mail functionality
+    const dataProtector = new IExecDataProtector(provider);
     
-    console.log('✅ iExec SDK initialized');
+    // Access the web3mail module from DataProtector
+    web3mail = dataProtector.web3mail;
+    
+    console.log('✅ iExec DataProtector initialized');
+    console.log('✅ Web3Mail module available:', !!web3mail);
+    
     return web3mail;
     
   } catch (error) {
