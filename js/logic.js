@@ -79,14 +79,26 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
   
-  if (typeof IExecWeb3Mail === 'undefined') {
+  // Debug: Log all iExec-related globals to find the correct variable name
+  console.log('🔍 Debugging iExec globals:');
+  console.log('- IExecWeb3Mail:', typeof IExecWeb3Mail);
+  console.log('- IExecWeb3mail:', typeof IExecWeb3mail);
+  console.log('- window.IExec:', typeof window.IExec);
+  console.log('- window.IExecDataProtector:', typeof window.IExecDataProtector);
+  
+  // Check multiple possible global variable names
+  const iExecGlobal = window.IExecWeb3Mail || window.IExecWeb3mail || window.IExec?.web3mail || window.IExec;
+  
+  if (!iExecGlobal) {
     console.error('❌ iExec Web3Mail SDK not loaded! Check CDN script.');
+    console.error('Available window properties:', Object.keys(window).filter(k => k.toLowerCase().includes('iexec')));
     alert('Error: iExec SDK not loaded. Please refresh the page.');
     return;
   }
   
   console.log('✅ Ethers.js loaded:', ethers.version);
   console.log('✅ iExec Web3Mail SDK loaded');
+  console.log('✅ Using global:', iExecGlobal);
   
   // Get both buttons (navbar and hero)
   const navbarButton = document.getElementById('joinWhitelistBtn');
