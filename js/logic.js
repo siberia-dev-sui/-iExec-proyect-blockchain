@@ -72,6 +72,22 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('🚀 Quintes Protocol - iExec Web3 Mail Integration');
   console.log('📋 Initializing...');
   
+  // Verify that required libraries are loaded
+  if (typeof ethers === 'undefined') {
+    console.error('❌ Ethers.js not loaded! Check CDN script.');
+    alert('Error: Web3 libraries not loaded. Please refresh the page.');
+    return;
+  }
+  
+  if (typeof IExecWeb3mail === 'undefined') {
+    console.error('❌ iExec Web3Mail SDK not loaded! Check CDN script.');
+    alert('Error: iExec SDK not loaded. Please refresh the page.');
+    return;
+  }
+  
+  console.log('✅ Ethers.js loaded:', ethers.version);
+  console.log('✅ iExec Web3Mail SDK loaded');
+  
   // Get both buttons (navbar and hero)
   const navbarButton = document.getElementById('joinWhitelistBtn');
   const heroButton = document.getElementById('joinWhitelistBtnHero');
@@ -91,6 +107,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   
   console.log('✅ iExec integration initialized successfully');
+  console.log('📍 Network:', CONFIG.NETWORK_NAME, `(Chain ID: ${CONFIG.NETWORK_ID})`);
+  console.log('🌐 Using iExec default Web3Mail configuration');
 });
 
 // ============================================================================
